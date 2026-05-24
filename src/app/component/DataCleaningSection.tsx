@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useCleaningStream } from "@/app/hooks/cleaningHook"
 import { CleanResult } from "../types/cleaning";
 
@@ -213,10 +213,13 @@ export default function DataCleaningSection({
     onCleaningComplete(null);
   };
 
-  // Propagate result up when done
-  if (isDone && result) {
-    onCleaningComplete(result);
-  }
+
+  // ✅ after — runs only when result changes (once, when stream finishes) straight forward isDone && result lead to looping
+  useEffect(() => {
+    if (isDone && result) {
+      onCleaningComplete(result);
+    }
+  }, [result]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
