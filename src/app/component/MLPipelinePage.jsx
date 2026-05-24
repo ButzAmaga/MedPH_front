@@ -4,6 +4,7 @@ import DataCleaningSection from "./DataCleaningSection";
 import DataProcessingSection from "./DataProcessingSection";
 import KMeansSection from "./KMeansSection";
 import PipelineDivider from "./PipelineDivider";
+import PCASection from "./PCASection";
 
 export default function MLPipelinePage() {
   const [cleaningResult, setCleaningResult] = useState(null);
@@ -109,7 +110,7 @@ export default function MLPipelinePage() {
         {/* Step 2 */}
         <div className={`bg-base-100 rounded-3xl border p-8 shadow-sm transition-all duration-700 overflow-hidden
           ${showProcessing ? "border-base-content/10 opacity-100 max-h-[9999px]" : "border-base-content/5 opacity-30 max-h-0 p-0"}`}>
-            
+
           {showProcessing && <DataProcessingSection />}
         </div>
 
@@ -127,6 +128,16 @@ export default function MLPipelinePage() {
         {/* Connector */}
         <PipelineDivider active={showProcessing} />
 
+        {/* Step 3 */}
+        <div className={`bg-base-100 rounded-3xl border p-8 shadow-sm transition-all duration-700 overflow-hidden
+          ${showClustering ? "border-base-content/10 opacity-100 max-h-[9999px]" : "border-base-content/5 opacity-30 max-h-0 p-0"}`}>
+          {showClustering && (
+            <PCASection />
+          )}
+        </div>          
+
+        {/* Connector */}
+        <PipelineDivider active={showProcessing} />
         {/* Step 3 */}
         <div className={`bg-base-100 rounded-3xl border p-8 shadow-sm transition-all duration-700 overflow-hidden
           ${showClustering ? "border-base-content/10 opacity-100 max-h-[9999px]" : "border-base-content/5 opacity-30 max-h-0 p-0"}`}>
