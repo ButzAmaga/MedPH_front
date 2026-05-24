@@ -12,7 +12,7 @@ const PIPELINE_STEPS = [
   { step: 2, label: "Pre-clean Snapshot" },
   { step: 3, label: "Clean Pipeline" },
   { step: 4, label: "Post-clean Snapshot" },
-  { step: 5, label: "Save to Disk" },
+  { step: 5, label: "Preparing for Download" },
   { step: 6, label: "Complete" },
 ];
 
