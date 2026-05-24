@@ -1,4 +1,4 @@
-interface DataPreprocessingMetrics {
+export interface DataPreprocessingMetrics {
   total_records: number;
   column_count: number;
   columns_present: string[];
@@ -9,3 +9,8 @@ interface DataPreprocessingMetrics {
 export interface PreprocessingResponse {
   metrics: DataPreprocessingMetrics;
 }
+
+export interface PreprocessResult {
+    metrics: DataPreprocessingMetrics;
+}
+

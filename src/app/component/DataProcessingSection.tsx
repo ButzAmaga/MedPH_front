@@ -1,38 +1,45 @@
 "use client";
 import { useState } from "react";
 import { PreprocessingResponse } from '@/app/types/preprocessing';
+import { PipelineSteps } from "./Pipeline";
+import { usePreprocessStream } from "../hooks/preprocessingHook";
 
-const PREPROCESS_OPTIONS = [
-  { id: "normalize", label: "Normalize", icon: "⊡", desc: "Scale values to [0,1]" },
-  { id: "fillnull", label: "Fill Nulls", icon: "◈", desc: "Impute missing values" },
-  { id: "encode", label: "Encode Categoricals", icon: "⊞", desc: "One-hot / label encoding" },
-  { id: "outliers", label: "Remove Outliers", icon: "◎", desc: "IQR-based filtering" },
-  { id: "duplicates", label: "Drop Duplicates", icon: "⊟", desc: "Remove repeated rows" },
-  { id: "scale", label: "Standardize", icon: "⊠", desc: "Z-score normalization" },
+
+const PIPELINE_STEPS = [
+  { step: 1, label: "Load Cleaned Dataset" },
+  { step: 2, label: "Running Preprocessing Pipeline" },
+  { step: 3, label: "Generating Preprocessing Metrics" },
+  { step: 4, label: "Saving Preprocessed Dataset" },
+  { step: 5, label: "Preparing for Download" },
+  { step: 6, label: "Complete" },
 ];
 
 export default function DataProcessingSection() {
-  const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<PreprocessingResponse | null>(null);
+  // const [result, setResult] = useState<PreprocessingResponse | null>(null);
 
+  const { status, logs, metrics, result, error, start, cancel, reset } =
+    usePreprocessStream();
+
+  const isStreaming = status === "streaming";
+  const isDone = status === "done";
+  const isError = status === "error";
+
+  // Current step is the last step number seen in logs
+  const currentStep = logs.length > 0 ? logs[logs.length - 1].step : 0;
+  // Last progress message
+  const lastMessage = logs.length > 0 ? logs[logs.length - 1].message : null;
 
   const handlePreprocess = async () => {
 
     setLoading(true);
 
     try {
-      const response = await fetch("api/preprocessing", {
-        method: "POST",
-        body: new FormData()
-      });
+      await start();
 
-      const data = await response.json()
-      console.log(data)
-
-      setResult(data)
     } catch (err) {
       console.error(err);
+
     } finally {
       setLoading(false);
     }
@@ -49,22 +56,27 @@ export default function DataProcessingSection() {
         </div>
         <h2 className="text-3xl font-bold tracking-tight mt-4">Data Preprocessing</h2>
         <p className="text-base-content/50 mt-1 font-mono text-sm">
-          Select transformations · Apply pipeline · Inspect outcome
+          Transformations
         </p>
       </div>
 
-
-
-      <button
+      {!result && <button
         className={`btn btn-secondary w-full font-mono tracking-wider ${loading ? "loading" : ""}`}
         onClick={handlePreprocess}
         disabled={loading}
       >
         {loading ? "Applying transformations..." : `→ Apply Preprocessing Steps`}
-      </button>
+      </button>}
+
+      {(isStreaming || isDone) &&
+        <PipelineSteps
+          currentStep={currentStep}
+          status={status}
+          pipeline={PIPELINE_STEPS}
+        />}
 
       {/* Results */}
-      {result && (
+      {metrics && (
         <div className="mt-6 space-y-4 animate-in fade-in duration-500">
           <h3 className="text-lg font-bold">Results</h3>
           <div className="bg-base-200 rounded-2xl p-5 border border-base-content/10">
@@ -79,8 +91,8 @@ export default function DataProcessingSection() {
                 </thead>
                 <tbody>
                   <tr className="hover:bg-base-content/5">
-                    <td className="font-mono font-semibold text-sm">{result.metrics.total_records}</td>
-                    <td className="font-mono font-semibold text-sm">{result.metrics.column_count}</td>
+                    <td className="font-mono font-semibold text-sm">{metrics.total_records}</td>
+                    <td className="font-mono font-semibold text-sm">{metrics.column_count}</td>
                   </tr>
 
                 </tbody>
@@ -89,8 +101,8 @@ export default function DataProcessingSection() {
 
             <p className="text-xs font-mono text-base-content/40 uppercase tracking-widest mb-4 mt-4">Columns</p>
             <div className="flex flex-wrap gap-3 mt-2">
-              {result?.metrics.columns_present &&
-                result?.metrics.columns_present.map((txt, id) => (
+              {metrics.columns_present &&
+                metrics.columns_present.map((txt, id) => (
                   <div key={id} className="badge badge-neutral/10 badge-sm font-mono hover:badge-neutral">
                     {txt}
                   </div>
@@ -99,6 +111,31 @@ export default function DataProcessingSection() {
           </div>
         </div>
       )}
-    </section>
+
+      {/* ── Final result ── */}
+      {isDone && result && ( 
+        <>
+        
+        < div className="flex gap-3 pt-2">
+      <a
+        href="/api/v2/cleaning/download"
+        className="btn btn-primary btn-sm font-mono tracking-wider"
+        download
+      >
+        ↓ Download cleaned CSV
+      </a>
+      <button
+        className="btn btn-ghost btn-sm font-mono text-xs opacity-50 hover:opacity-100"
+        onClick={reset}
+      >
+        ↺ Upload new file
+      </button>
+    </div>
+  )
+}
+
+
+
+    </section >
   );
 }

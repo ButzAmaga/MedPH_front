@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useCleaningStream } from "@/app/hooks/cleaningHook"
 import { CleanResult } from "../types/cleaning";
+import { PipelineSteps } from "./Pipeline";
+import { pipeline } from "stream";
 
 // ---------------------------------------------------------------------------
 // Pipeline step definitions — order must match backend step numbers
@@ -16,41 +18,6 @@ const PIPELINE_STEPS = [
   { step: 6, label: "Complete" },
 ];
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-function PipelineSteps({ currentStep, status }: { currentStep: number; status: string }) {
-  return (
-    <ul className="steps steps-vertical w-full">
-      {PIPELINE_STEPS.map(({ step, label }) => {
-        const isDone = currentStep > step || status === "done";
-        const isActive = currentStep === step && status === "streaming";
-        const isError = status === "error" && currentStep === step;
-
-        return (
-          <li
-            key={step}
-            className={`step transition-all duration-300
-              ${isDone ? "step-success" : ""}
-              ${isActive ? "step-primary" : ""}
-              ${isError ? "step-error" : ""}
-            `}
-          >
-            <span className="flex items-center gap-2 text-sm font-mono">
-              {isActive && (
-                <span className="loading loading-spinner loading-xs text-primary" />
-              )}
-              <span className={isDone ? "text-success" : isActive ? "text-primary" : "text-base-content/40"}>
-                {label}
-              </span>
-            </span>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
 
 function SnapshotTable({
   label,
@@ -331,7 +298,7 @@ export default function DataCleaningSection({
           </div>
 
           {/* DaisyUI vertical steps */}
-          <PipelineSteps currentStep={currentStep} status={status} />
+          <PipelineSteps currentStep={currentStep} status={status} pipeline={PIPELINE_STEPS} />
 
           {/* Live message ticker */}
           {lastMessage && (
@@ -359,7 +326,7 @@ export default function DataCleaningSection({
       {isError && error && (
         <div className="mt-4 space-y-3 animate-in fade-in duration-300">
           {/* Show steps up to where it failed */}
-          <PipelineSteps currentStep={currentStep} status={status} />
+          <PipelineSteps currentStep={currentStep} status={status} pipeline={PIPELINE_STEPS} />
 
           <div role="alert" className="alert alert-error">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
@@ -380,7 +347,7 @@ export default function DataCleaningSection({
       {isDone && result && (
         <div className="mt-4 space-y-4 animate-in fade-in duration-500">
           {/* Completed steps */}
-          <PipelineSteps currentStep={6} status="done" />
+          <PipelineSteps currentStep={6} status="done" pipeline={PIPELINE_STEPS} />
           <ResultSummary result={result} onReset={handleReset} />
         </div>
       )}
