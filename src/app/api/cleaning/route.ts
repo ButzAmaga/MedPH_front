@@ -15,7 +15,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<CleaningR
     const externalFormData = new FormData();
     externalFormData.append('file', file);
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/clean-summary/?is_2022_format=false`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/cleaning/clean?is_2022_format=false`, {
       method: 'POST',
       body: externalFormData
     });

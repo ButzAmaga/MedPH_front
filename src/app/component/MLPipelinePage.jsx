@@ -86,7 +86,7 @@ export default function MLPipelinePage() {
         </div>
         <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-[1.05] mb-4">
           From Raw Data<br />
-          <span className="text-transparent bg-clip-text"
+          <span className=" bg-clip-text"
             style={{ backgroundImage: "linear-gradient(135deg, hsl(var(--p)), hsl(var(--s)), hsl(var(--a)))" }}>
             to Clusters
           </span>
@@ -109,23 +109,8 @@ export default function MLPipelinePage() {
         {/* Step 2 */}
         <div className={`bg-base-100 rounded-3xl border p-8 shadow-sm transition-all duration-700 overflow-hidden
           ${showProcessing ? "border-base-content/10 opacity-100 max-h-[9999px]" : "border-base-content/5 opacity-30 max-h-0 p-0"}`}>
-          {showProcessing && (
-            <>
-              <DataProcessingSection
-                cleaningResult={cleaningResult}
-                headers={headers}
-                rows={rows}
-              />
-              {!showClustering && (
-                <button
-                  className="btn btn-ghost btn-sm font-mono text-xs mt-6 opacity-50 hover:opacity-100"
-                  onClick={() => setTimeout(() => setShowClustering(true), 200)}
-                >
-                  Skip to clustering →
-                </button>
-              )}
-            </>
-          )}
+            
+          {showProcessing && <DataProcessingSection />}
         </div>
 
         {!showProcessing && cleaningResult && (
