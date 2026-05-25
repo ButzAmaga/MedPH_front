@@ -61,35 +61,38 @@ export default function PCASection({ present_columns }: { present_columns: strin
                 </div>
                 <h2 className="text-3xl font-bold tracking-tight mt-4">PCA</h2>
                 <p className="text-base-content/50 mt-1 font-mono text-sm">
-                    Transformations
+                    Select Features
                 </p>
             </div>
 
             <div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {present_columns?.map((col, index) => (
-                        <label
-                            key={index}
-                            className="label cursor-pointer justify-start gap-4 border rounded-lg p-3"
-                        >
-                            <input
-                                type="checkbox"
-                                name="pca_columns_selected"
-                                value={col}
-                                className="checkbox checkbox-primary"
-                            />
-                            <span className="label-text">
-                                {col}
-                            </span>
-                        </label>
-                    ))}
-                </div>
+                {!result && !isDone &&
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {present_columns?.map((col, index) => (
+                            <label
+                                key={index}
+                                className="label cursor-pointer justify-start gap-4 border rounded-lg p-3"
+                            >
+                                <input
+                                    type="checkbox"
+                                    name="pca_columns_selected"
+                                    value={col}
+                                    className="checkbox checkbox-primary"
+                                />
+                                <span className="label-text">
+                                    {col}
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+
+                }
             </div>
 
             {!result &&
                 <button
-                    className={`btn bg-amber-400 border-amber-400 hover:bg-amber-500 hover:border-amber-500 text-black w-full font-mono tracking-wider ${loading ? "loading" : ""}`}
+                    className={`mt-4 btn bg-amber-400 border-amber-400 hover:bg-amber-500 hover:border-amber-500 text-black w-full font-mono tracking-wider ${loading ? "loading" : ""}`}
                     onClick={handlePCA}
                     disabled={loading}
                 >
@@ -155,7 +158,7 @@ export default function PCASection({ present_columns }: { present_columns: strin
                                     <tbody>
                                         {result.diagnostics.explained_variance_ratio.map((data, id) =>
                                             <tr className="hover:bg-base-content/5" key={id}>
-                                                <td className="font-mono font-semibold text-sm">PCA {id+1}</td>
+                                                <td className="font-mono font-semibold text-sm">PCA {id + 1}</td>
                                                 <td className="font-mono font-semibold text-sm">{data}</td>
                                             </tr>
                                         )}
@@ -180,7 +183,7 @@ export default function PCASection({ present_columns }: { present_columns: strin
                                     <tbody>
                                         {result.diagnostics.cumulative_explained_variance.map((data, id) =>
                                             <tr className="hover:bg-base-content/5" key={id}>
-                                                <td className="font-mono font-semibold text-sm">{id+1} Combined</td>
+                                                <td className="font-mono font-semibold text-sm">{id + 1} Combined</td>
                                                 <td className="font-mono font-semibold text-sm">{data}</td>
                                             </tr>
                                         )}
@@ -190,10 +193,30 @@ export default function PCASection({ present_columns }: { present_columns: strin
                                 </table>
                             </div>
 
-                        </div>                        
+                        </div>
                     </div>
                 </>
             )}
+
+            {/* ── Final result ── */}
+            {isDone && result && (
+                <div className="flex gap-3 pt-2 mt-4">
+                    <a
+                        href="/api/v2/pca/download"
+                        className="btn btn-primary btn-sm font-mono tracking-wider"
+                        download
+                    >
+                        ↓ Download PCA CSV
+                    </a>
+                    <button
+                        className="btn btn-ghost btn-sm font-mono text-xs opacity-50 hover:opacity-100"
+                        onClick={reset}
+                    >
+                        ↺ PCA Again
+                    </button>
+                </div>
+            )}
+
 
         </section >
     );

@@ -5,7 +5,7 @@ export default function KMeansSection({ cleaningResult, headers }) {
   const [k, setK] = useState(3);
   const [maxIter, setMaxIter] = useState(300);
   const [initMethod, setInitMethod] = useState("k-means++");
-  const [distanceMetric, setDistanceMetric] = useState("euclidean");
+  const [num_init, setNum_init] = useState(10);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
 
@@ -14,47 +14,7 @@ export default function KMeansSection({ cleaningResult, headers }) {
   const handleCluster = async () => {
     setLoading(true);
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [
-            {
-              role: "user",
-              content: `Simulate K-Means clustering on a dataset with these properties: ${JSON.stringify(cleaningResult)}
-Columns: ${JSON.stringify(headers)}
-Configuration: k=${k}, maxIterations=${maxIter}, initMethod=${initMethod}, distanceMetric=${distanceMetric}
-
-Respond ONLY with a JSON object (no markdown, no backticks):
-{
-  "clusters": [
-    {
-      "id": number,
-      "size": number,
-      "percentage": number,
-      "label": string (descriptive name for this cluster),
-      "centroid": {column_name: value},
-      "characteristics": string[]
-    }
-  ],
-  "iterations": number,
-  "inertia": number,
-  "silhouetteScore": number (-1 to 1),
-  "converged": boolean,
-  "dominantFeatures": string[],
-  "interpretation": string (2-3 sentences summarizing what the clusters reveal)
-}`,
-            },
-          ],
-        }),
-      });
-
-      const data = await response.json();
-      const raw = data.content.map((i) => i.text || "").join("");
-      const clean = raw.replace(/```json|```/g, "").trim();
-      setResult(JSON.parse(clean));
+      
     } catch (err) {
       console.error(err);
     } finally {
@@ -69,9 +29,9 @@ Respond ONLY with a JSON object (no markdown, no backticks):
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="badge badge-outline badge-lg font-mono text-xs tracking-widest border-accent text-accent">
-            STEP 03
+            STEP 04
           </div>
-          <div className="h-px flex-1 bg-gradient-to-r from-accent/40 to-transparent" />
+          <div className="h-px flex-1 bg-linear-to-r from-accent/40 to-transparent" />
         </div>
         <h2 className="text-3xl font-bold tracking-tight">K-Means Clustering</h2>
         <p className="text-base-content/50 mt-1 font-mono text-sm">
@@ -97,14 +57,14 @@ Respond ONLY with a JSON object (no markdown, no backticks):
             <input
               type="range"
               min={2}
-              max={12}
+              max={15}
               value={k}
               onChange={(e) => setK(Number(e.target.value))}
-              className="range range-accent range-sm"
+              className="range range-accent range-sm w-full"
               step={1}
             />
             <div className="flex justify-between text-xs text-base-content/30 font-mono mt-1 px-1">
-              {Array.from({ length: 11 }, (_, i) => i + 2).map((n) => (
+              {Array.from({ length: 14 }, (_, i) => i + 2).map((n) => (
                 <span key={n}>{n}</span>
               ))}
             </div>
@@ -128,7 +88,7 @@ Respond ONLY with a JSON object (no markdown, no backticks):
               step={50}
               value={maxIter}
               onChange={(e) => setMaxIter(Number(e.target.value))}
-              className="range range-accent range-sm"
+              className="range range-accent range-sm w-full"
             />
             <div className="flex justify-between text-xs text-base-content/30 font-mono mt-1">
               <span>50</span><span>500</span><span>1000</span>
@@ -137,10 +97,12 @@ Respond ONLY with a JSON object (no markdown, no backticks):
 
           {/* Init + Distance grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {/** Initilization method */}
             <div>
               <label className="font-semibold text-sm block mb-2">Initialization Method</label>
               <div className="flex flex-col gap-2">
-                {["k-means++", "random", "forgy"].map((m) => (
+                {["k-means++", "random"].map((m) => (
                   <button
                     key={m}
                     onClick={() => setInitMethod(m)}
@@ -156,23 +118,11 @@ Respond ONLY with a JSON object (no markdown, no backticks):
               </div>
             </div>
 
+            {/** Number of Init */}
             <div>
-              <label className="font-semibold text-sm block mb-2">Distance Metric</label>
-              <div className="flex flex-col gap-2">
-                {["euclidean", "manhattan", "cosine"].map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => setDistanceMetric(d)}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-mono transition-all duration-200
-                      ${distanceMetric === d
-                        ? "border-accent bg-accent/15 text-accent"
-                        : "border-base-content/10 hover:border-accent/40 text-base-content/60"}`}
-                  >
-                    <div className={`w-2 h-2 rounded-full transition-all ${distanceMetric === d ? "bg-accent" : "bg-base-content/20"}`} />
-                    {d}
-                  </button>
-                ))}
-              </div>
+              <label className="font-semibold text-sm block mb-2">Number of Initialisation runs</label>
+              <input type="number" className="input input-primary input-xl w-full" min={1} max={1000} value={num_init} onChange={(e) => setNum_init(Number(e.target.value))}/>
+
             </div>
           </div>
         </div>
@@ -183,8 +133,8 @@ Respond ONLY with a JSON object (no markdown, no backticks):
         {[
           { l: "k", v: k },
           { l: "max_iter", v: maxIter },
-          { l: "init", v: initMethod },
-          { l: "metric", v: distanceMetric },
+          { l: "init method", v: initMethod },
+          { l: "num Init", v: num_init },
         ].map((t) => (
           <div key={t.l} className="font-mono text-xs bg-base-200 border border-base-content/10 rounded-lg px-3 py-1.5">
             <span className="text-base-content/40">{t.l}=</span>
@@ -240,7 +190,7 @@ Respond ONLY with a JSON object (no markdown, no backticks):
               {result.clusters?.map((c, i) => (
                 <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-base-100/50">
                   <div
-                    className="w-3 h-3 rounded-full flex-shrink-0 mt-1"
+                    className="w-3 h-3 rounded-full shrink-0 mt-1"
                     style={{ backgroundColor: COLORS[i % COLORS.length] }}
                   />
                   <div className="min-w-0">
