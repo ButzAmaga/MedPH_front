@@ -7,7 +7,7 @@ import { DiagnosticsEvent, PCAProcessResponse } from "../types/pca";
 export interface PreprocessStreamState {
   status: StreamStatus; // TO RELOCATE: generic instead of type cleaning
   logs: ProgressEvent[];
-  diagnostics: DiagnosticsEvent | null;  
+  diagnostics: DiagnosticsEvent | null;
   result: PCAProcessResponse | null;
   error: StreamError | null;   // TO RELOCATE: generic instead of type cleaning
 }
@@ -27,16 +27,22 @@ export function usePCAStream() {
 
   const abortRef = useRef<AbortController | null>(null);
 
-  const start = useCallback(async () => {
-    
+  const start = useCallback(async (selected_column: string[]) => {
+
     // RESPONSE INITIALIZE
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
-    setState( prev => ({ ...prev, status: "streaming" }));
+    setState(prev => ({ ...prev, status: "streaming" }));
 
     const body = new FormData();
+    // Use forEach for actions/side-effects
+    selected_column.forEach(val => body.append("selected_cols", val));
+
+    for (let [key, value] of body.entries()) {
+      console.log(`${key}: ${value}`);
+    }
 
     let response: Response;
     try {
@@ -70,12 +76,15 @@ export function usePCAStream() {
             break;
           case "diagnostics":
             setState((p) => ({ ...p, diagnostics: parsed as DiagnosticsEvent }));
+            console.log("diagnostics:", parsed)
             break;
           case "result":
             setState((p) => ({ ...p, status: "done", result: parsed as PCAProcessResponse }));
+            console.log("result:", parsed)
             break;
           case "error":
             setState((p) => ({ ...p, status: "error", error: parsed as StreamError }));
+            console.log("error:", parsed)
             break;
         }
       } catch { /* heartbeat comment or malformed frame — ignore */ }
@@ -103,6 +112,7 @@ export function usePCAStream() {
       }
     } catch (err: unknown) {
       if ((err as Error).name !== "AbortError") {
+        console.log(err);
         setState((p) => ({ ...p, status: "error", error: { detail: "Stream was interrupted unexpectedly.", status_code: 0 } }));
       }
     }

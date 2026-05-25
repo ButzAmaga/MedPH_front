@@ -2,6 +2,7 @@ export interface DataPreprocessingMetrics {
   total_records: number;
   column_count: number;
   columns_present: string[];
+  pca_ready_columns: string[];
   unique_years_computed: number[];
   unique_regions_collapsed: string[];
 }

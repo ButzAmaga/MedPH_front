@@ -13,6 +13,8 @@ export default function MLPipelinePage() {
   const [showProcessing, setShowProcessing] = useState(true);
   const [showClustering, setShowClustering] = useState(true);
 
+  const [column_present, setColumnPresent] = useState([]);
+
   const handleCleaningComplete = (result, h, r) => {
     if (!result) {
       setCleaningResult(null);
@@ -111,7 +113,7 @@ export default function MLPipelinePage() {
         <div className={`bg-base-100 rounded-3xl border p-8 shadow-sm transition-all duration-700 overflow-hidden
           ${showProcessing ? "border-base-content/10 opacity-100 max-h-[9999px]" : "border-base-content/5 opacity-30 max-h-0 p-0"}`}>
 
-          {showProcessing && <DataProcessingSection />}
+          {showProcessing && <DataProcessingSection handleColumns={setColumnPresent}/>}
         </div>
 
         {!showProcessing && cleaningResult && (
@@ -132,7 +134,7 @@ export default function MLPipelinePage() {
         <div className={`bg-base-100 rounded-3xl border p-8 shadow-sm transition-all duration-700 overflow-hidden
           ${showClustering ? "border-base-content/10 opacity-100 max-h-[9999px]" : "border-base-content/5 opacity-30 max-h-0 p-0"}`}>
           {showClustering && (
-            <PCASection />
+            <PCASection present_columns={column_present}/>
           )}
         </div>          
 

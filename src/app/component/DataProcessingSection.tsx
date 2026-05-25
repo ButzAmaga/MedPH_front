@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { PreprocessingResponse } from '@/app/types/preprocessing';
 import { PipelineSteps } from "./Pipeline";
 import { usePreprocessStream } from "../hooks/preprocessingHook";
@@ -93,7 +93,11 @@ const PIPELINE_STEPS = [
   { step: 6, label: "Complete" },
 ];
 
-export default function DataProcessingSection() {
+export default function DataProcessingSection({
+    handleColumns}:{
+        handleColumns: Dispatch<SetStateAction<string[]>>
+    }
+) {
   const [loading, setLoading] = useState(false);
   // const [result, setResult] = useState<PreprocessingResponse | null>(null);
 
@@ -123,6 +127,13 @@ export default function DataProcessingSection() {
       setLoading(false);
     }
   };
+
+  // save the column preprocess in the global
+  useEffect(() => {
+    if (result) {
+      handleColumns(result.metrics.pca_ready_columns);
+    }
+  }, [result, handleColumns]);
 
   return (
     <section className="relative w-full">

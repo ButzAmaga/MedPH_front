@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { usePCAStream } from "../hooks/pcaHook";
 import { PipelineSteps } from "./Pipeline";
 
@@ -11,7 +11,7 @@ const PIPELINE_STEPS = [
 ];
 
 
-export default function PCASection() {
+export default function PCASection({ present_columns }: { present_columns: string[] }) {
     const [loading, setLoading] = useState(false);
     const { status, logs, diagnostics, result, error, start, cancel, reset } =
         usePCAStream();
@@ -25,12 +25,22 @@ export default function PCASection() {
     // Last progress message
     const lastMessage = logs.length > 0 ? logs[logs.length - 1].message : null;
 
+
+
     const handlePCA = async () => {
 
         setLoading(true);
 
         try {
-            await start()
+            // Select all checked checkboxes with the name "pca_selected_column"
+            const checkedBoxes = document.querySelectorAll<HTMLInputElement>('input[name="pca_columns_selected"]:checked');
+
+            // Extract the values into an array
+            const selectedValues = Array.from(checkedBoxes).map(cb => cb.value);
+
+            console.log(selectedValues)
+            // pass the selected values for PCA
+            await start(selectedValues)
 
         } catch (err) {
             console.error(err);
@@ -53,6 +63,28 @@ export default function PCASection() {
                 <p className="text-base-content/50 mt-1 font-mono text-sm">
                     Transformations
                 </p>
+            </div>
+
+            <div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {present_columns?.map((col, index) => (
+                        <label
+                            key={index}
+                            className="label cursor-pointer justify-start gap-4 border rounded-lg p-3"
+                        >
+                            <input
+                                type="checkbox"
+                                name="pca_columns_selected"
+                                value={col}
+                                className="checkbox checkbox-primary"
+                            />
+                            <span className="label-text">
+                                {col}
+                            </span>
+                        </label>
+                    ))}
+                </div>
             </div>
 
             {!result &&
@@ -79,6 +111,88 @@ export default function PCASection() {
                     <span className="loading loading-dots loading-xs text-primary" />
                     <p className="text-xs font-mono text-base-content/60 truncate">{lastMessage}</p>
                 </div>
+            )}
+
+            {/* Results */}
+            {result && (
+                <>
+                    <div className="mt-6 space-y-4 animate-in fade-in duration-500">
+                        <h3 className="text-lg font-bold">Results</h3>
+
+                        <div className="bg-base-200 rounded-2xl p-5 border border-base-content/10">
+                            <p className="text-xs font-mono text-base-content/40 uppercase tracking-widest mb-4">Feature Used</p>
+                            <div className="overflow-x-auto">
+                                <table className="table table-sm">
+                                    <thead>
+                                        <tr className="text-xs font-mono text-base-content/40">
+                                            <th>Name</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {result.diagnostics.features_used.map((data, id) =>
+                                            <tr className="hover:bg-base-content/5" key={id}>
+                                                <td className="font-mono font-semibold text-sm">{data}</td>
+                                            </tr>
+                                        )}
+
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+
+                        <div className="bg-base-200 rounded-2xl p-5 border border-base-content/10">
+                            <p className="text-xs font-mono text-base-content/40 uppercase tracking-widest mb-4">Explain Variance Ratio</p>
+                            <div className="overflow-x-auto">
+                                <table className="table table-sm">
+                                    <thead>
+                                        <tr className="text-xs font-mono text-base-content/40">
+                                            <th>PCA #</th>
+                                            <th>Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {result.diagnostics.explained_variance_ratio.map((data, id) =>
+                                            <tr className="hover:bg-base-content/5" key={id}>
+                                                <td className="font-mono font-semibold text-sm">PCA {id+1}</td>
+                                                <td className="font-mono font-semibold text-sm">{data}</td>
+                                            </tr>
+                                        )}
+
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+
+                        <div className="bg-base-200 rounded-2xl p-5 border border-base-content/10">
+                            <p className="text-xs font-mono text-base-content/40 uppercase tracking-widest mb-4">Cumulative Explained Variance</p>
+                            <div className="overflow-x-auto">
+                                <table className="table table-sm">
+                                    <thead>
+                                        <tr className="text-xs font-mono text-base-content/40">
+                                            <th>PCA #</th>
+                                            <th>Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {result.diagnostics.cumulative_explained_variance.map((data, id) =>
+                                            <tr className="hover:bg-base-content/5" key={id}>
+                                                <td className="font-mono font-semibold text-sm">{id+1} Combined</td>
+                                                <td className="font-mono font-semibold text-sm">{data}</td>
+                                            </tr>
+                                        )}
+
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>                        
+                    </div>
+                </>
             )}
 
         </section >
