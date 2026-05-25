@@ -1,15 +1,14 @@
 import { useState, useCallback, useRef } from "react";
 import { StreamError, StreamStatus } from "../types/cleaning";
 import { DiagnosticsEvent, PCAProcessResponse } from "../types/pca";
+import { MetricsEventData } from "../types/kmeans";
 
 
 
 export interface KmeansStreamState {
   status: StreamStatus; // TO RELOCATE: generic instead of type cleaning
   logs: ProgressEvent[];
-  metrics: DiagnosticsEvent | null;
-  visualization: string
-  result: PCAProcessResponse | null;
+  metrics: MetricsEventData | null;
   error: StreamError | null;   // TO RELOCATE: generic instead of type cleaning
 }
 
@@ -18,17 +17,20 @@ export interface KmeansStreamState {
 // ---------------------------------------------------------------------------
 
 export function useKmeanStream() {
-  const [state, setState] = useState<PreprocessStreamState>({
+  const [state, setState] = useState<KmeansStreamState>({
     status: "idle",
     logs: [],
-    diagnostics: null,
-    result: null,
+    metrics: null,
     error: null,
   });
 
   const abortRef = useRef<AbortController | null>(null);
 
-  const start = useCallback(async (selected_column: string[]) => {
+  const start = useCallback(async (
+    k_selected: number, 
+    init_strategy: string, 
+    n_init: number, 
+    max_iterations: number) => {
 
     // RESPONSE INITIALIZE
     abortRef.current?.abort();
@@ -39,7 +41,10 @@ export function useKmeanStream() {
 
     const body = new FormData();
     // Use forEach for actions/side-effects
-    selected_column.forEach(val => body.append("selected_cols", val));
+    body.append("k_selected", k_selected.toString());
+    body.append("init_strategy", init_strategy);
+    body.append("n_init", n_init.toString());
+    body.append("max_iterations", max_iterations.toString());
 
     for (let [key, value] of body.entries()) {
       console.log(`${key}: ${value}`);
@@ -47,7 +52,7 @@ export function useKmeanStream() {
 
     let response: Response;
     try {
-      response = await fetch("api/v2/pca", { method: "POST", body, signal: controller.signal });
+      response = await fetch("api/v2/kmeans", { method: "POST", body, signal: controller.signal });
 
     } catch (err: unknown) {
       if ((err as Error).name === "AbortError") return;
@@ -75,13 +80,9 @@ export function useKmeanStream() {
           case "progress":
             setState((p) => ({ ...p, logs: [...p.logs, parsed as ProgressEvent] }));
             break;
-          case "diagnostics":
-            setState((p) => ({ ...p, diagnostics: parsed as DiagnosticsEvent }));
-            console.log("diagnostics:", parsed)
-            break;
-          case "result":
-            setState((p) => ({ ...p, status: "done", result: parsed as PCAProcessResponse }));
-            console.log("result:", parsed)
+          case "metrics":
+            setState((p) => ({ ...p, status:"done", metrics: parsed as MetricsEventData }));
+            console.log("metrics:", parsed)
             break;
           case "error":
             setState((p) => ({ ...p, status: "error", error: parsed as StreamError }));
@@ -126,7 +127,7 @@ export function useKmeanStream() {
 
   const reset = useCallback(() => {
     abortRef.current?.abort();
-    setState({ status: "idle", logs: [], diagnostics: null, result: null, error: null });
+    setState({ status: "idle", logs: [], metrics: null, error: null });
   }, []);
 
   return { ...state, start, cancel, reset };
