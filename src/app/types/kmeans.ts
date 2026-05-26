@@ -3,9 +3,7 @@
 export interface MetricsEventData {
   inertia: number;
   silhouette_score_sample: number;
-  cluster_distribution: {
-    [clusterName: string]: number; // e.g., "Cluster_0": 2243
-  };
+  cluster_distribution: Record<string, number>; // e.g., "Cluster_0": 2243
 }
 
 // 2. Definition for the 'visualization' event data

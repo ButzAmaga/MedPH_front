@@ -2,6 +2,86 @@
 import { useState } from "react";
 import { useKmeanStream } from "../hooks/kmeansHook";
 import { PipelineSteps } from "./Pipeline";
+import { MetricsEventData } from "../types/kmeans";
+
+
+export function KMeansMetricsCard({ clusteringMetrics }: { clusteringMetrics: MetricsEventData }) {
+  const distributionEntries = Object.entries(
+    clusteringMetrics.cluster_distribution
+  );
+
+  return (
+    <div className="mt-4">
+      <div className="max-w-7xl mx-auto">
+
+        {/** Inertial and Silloute */}
+        <div className="grid grid-cols-2 gap-4 justify-center">
+
+          {/* Inertia */}
+          <div className="card bg-base-200 shadow-xl border border-base-300 hover:shadow-2xl transition-all duration-300">
+            <div className="card-body">
+              <div className="flex flex-col gap-3 mb-4">
+                <div className="text-4xl">📉</div>
+                <p className="text-lg font-semibold">Inertia</p>
+              </div>
+
+              <div className="text-2xl font-bold text-primary">
+                {clusteringMetrics.inertia.toFixed(2)}
+              </div>
+
+              <p className="text-sm text-base-content/60 mt-2">
+                Measures cluster compactness.
+              </p>
+            </div>
+          </div>
+
+          {/* Silhouette Score */}
+          <div className="card bg-base-200 shadow-xl border border-base-300 hover:shadow-2xl transition-all duration-300">
+            <div className="card-body">
+              <div className="flex flex-col gap-3 mb-4">
+                <div className="text-4xl">📊</div>
+                <p className="text-lg font-semibold">Silhouette Score</p>
+              </div>
+
+              <div className="text-2xl font-bold text-success">
+                {clusteringMetrics.silhouette_score_sample.toFixed(3)}
+              </div>
+
+              <p className="text-sm text-base-content/60 mt-2">
+                Indicates clustering quality and separation.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Cluster Distribution */}
+        <div className="mt-4 card bg-base-200 shadow-xl border border-base-300 hover:shadow-2xl transition-all duration-300">
+          <div className="card-body">
+            <div className="flex flex-col gap-3 mb-4">
+              <div className="text-4xl">🧩</div>
+              <p className="text-lg font-semibold">Cluster Distribution</p>
+            </div>
+
+            <div className="space-y-3">
+              {distributionEntries.map(([cluster, count]) => (
+                <div
+                  key={cluster}
+                  className="flex items-center justify-between bg-base-100 rounded-lg px-4 py-3"
+                >
+                  <span className="font-medium">{cluster}</span>
+                  <span className="badge badge-primary badge-lg">
+                    {count}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function KMeansSection({ cleaningResult, headers }) {
   const [k, setK] = useState(3);
@@ -73,7 +153,7 @@ export default function KMeansSection({ cleaningResult, headers }) {
       </div>
 
       {/* Config panel */}
-      {(!isDone || isStreaming) && <div>
+      {!isStreaming && !isDone && <div>
 
         <div className="bg-base-200 rounded-2xl p-6 border border-base-content/10 mb-5">
           <p className="text-xs font-mono text-base-content/40 uppercase tracking-widest mb-6">
@@ -189,7 +269,9 @@ export default function KMeansSection({ cleaningResult, headers }) {
       }
 
       {/* DaisyUI vertical steps */}
-      <PipelineSteps currentStep={currentStep} status={status} pipeline={PIPELINE_STEPS} />
+      {(isStreaming || isDone) && 
+        <PipelineSteps currentStep={currentStep} status={status} pipeline={PIPELINE_STEPS} />
+      }
 
       {/* Live message ticker */}
       {lastMessage && (
@@ -199,83 +281,27 @@ export default function KMeansSection({ cleaningResult, headers }) {
         </div>
       )}
 
+      {metrics && <KMeansMetricsCard clusteringMetrics={metrics} />}
 
-      {/* Results */}
-      {false && (
-        <div className="mt-6 space-y-4 animate-in fade-in duration-500">
-          {/* Metrics row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { label: "Silhouette", val: result.silhouetteScore?.toFixed(3), note: "closer to 1 = better" },
-              { label: "Inertia", val: result.inertia?.toFixed(0), note: "within-cluster variance" },
-              { label: "Iterations", val: result.iterations, note: result.converged ? "✓ converged" : "max reached" },
-              { label: "Clusters", val: result.clusters?.length, note: `k=${k}` },
-            ].map((m, i) => (
-              <div key={i} className="bg-base-200 rounded-2xl p-4 border border-base-content/10">
-                <p className="text-xs font-mono text-base-content/40 uppercase tracking-widest">{m.label}</p>
-                <p className="text-2xl font-black text-accent mt-1">{m.val}</p>
-                <p className="text-xs text-base-content/30 font-mono mt-0.5">{m.note}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Visual cluster bar */}
-          <div className="bg-base-200 rounded-2xl p-5 border border-base-content/10">
-            <p className="text-xs font-mono text-base-content/40 uppercase tracking-widest mb-4">Cluster Distribution</p>
-            <div className="flex h-10 rounded-xl overflow-hidden gap-0.5 mb-4">
-              {result.clusters?.map((c, i) => (
-                <div
-                  key={i}
-                  title={`Cluster ${c.id}: ${c.label} (${c.percentage?.toFixed(1)}%)`}
-                  style={{ width: `${c.percentage}%`, backgroundColor: COLORS[i % COLORS.length] }}
-                  className="flex items-center justify-center text-xs font-mono text-white font-bold transition-all hover:opacity-80 cursor-pointer"
-                >
-                  {c.percentage > 8 ? `${c.percentage?.toFixed(0)}%` : ""}
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-              {result.clusters?.map((c, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-base-100/50">
-                  <div
-                    className="w-3 h-3 rounded-full shrink-0 mt-1"
-                    style={{ backgroundColor: COLORS[i % COLORS.length] }}
-                  />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-sm">{c.label}</p>
-                      <span className="badge badge-ghost badge-xs font-mono">{c.size?.toLocaleString()} rows</span>
-                    </div>
-                    <ul className="mt-1 space-y-0.5">
-                      {c.characteristics?.slice(0, 2).map((ch, j) => (
-                        <li key={j} className="text-xs text-base-content/40 flex items-start gap-1">
-                          <span className="text-accent/60">›</span> {ch}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Dominant features + Interpretation */}
-          <div className="bg-base-200 rounded-2xl p-5 border border-base-content/10">
-            <p className="text-xs font-mono text-base-content/40 uppercase tracking-widest mb-3">Key Discriminating Features</p>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {result.dominantFeatures?.map((f, i) => (
-                <span key={i} className="badge font-mono" style={{ backgroundColor: COLORS[i % COLORS.length] + "33", color: COLORS[i % COLORS.length], borderColor: COLORS[i % COLORS.length] + "66" }}>
-                  {f}
-                </span>
-              ))}
-            </div>
-            <div className="border-l-2 border-accent/40 pl-4">
-              <p className="text-sm text-base-content/70 leading-relaxed">{result.interpretation}</p>
-            </div>
-          </div>
+      {/* ── Final result ── */}
+      {isDone && metrics && (
+        <div className="flex gap-3 pt-2 mt-4">
+          <a
+            href="/api/v2/kmeans/download"
+            className="btn btn-primary btn-sm font-mono tracking-wider"
+            download
+          >
+            ↓ Download 3D Plot
+          </a>
+          <button
+            className="btn btn-ghost btn-sm font-mono text-xs opacity-50 hover:opacity-100"
+            onClick={reset}
+          >
+            ↺ Cluster Again
+          </button>
         </div>
       )}
+
     </section>
   );
 }
