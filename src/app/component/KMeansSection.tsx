@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useKmeanStream } from "../hooks/kmeansHook";
 import { PipelineSteps } from "./Pipeline";
-import { MetricsEventData } from "../types/kmeans";
+import { ClusterInfo, MetricsEventData } from "../types/kmeans";
 
 
 export function KMeansMetricsCard({ clusteringMetrics }: { clusteringMetrics: MetricsEventData }) {
@@ -83,17 +83,92 @@ export function KMeansMetricsCard({ clusteringMetrics }: { clusteringMetrics: Me
   );
 }
 
+export function TableDataSummary({ cluster_info }: { cluster_info: Record<string, ClusterInfo> }) {
+  return (
+    <>
+      
+      {Object.entries(cluster_info).map(([clusterId, info]) => (
+        <details className="dropdown" key={clusterId}>
+          <summary className="btn m-1 text-lg font-bold w-full mt-4">Cluster {clusterId}</summary>
+
+          <div className="mt-6 space-y-4 animate-in fade-in duration-500" >
+
+            <div className="bg-base-200 rounded-2xl p-5 border border-base-content/10">
+              <p className="text-xs font-mono text-base-content/40 uppercase tracking-widest mb-4">Total Count: {info.row_count}</p>
+
+              {/** Table for numeric */}
+              <div className="overflow-x-auto ">
+                <h4 className="font-bold">Numerical Analysis</h4>
+                <table className="table table-sm">
+                  <thead>
+                    <tr className="text-xs font-mono text-base-content/40">
+                      <th>Name</th>
+                      <th>Min</th>
+                      <th>Max</th>
+                      <th>Mean</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(info.numeric_summary).map(([metricName, metricValue]) => (
+                      <tr className="hover:bg-base-content/5" key={metricName}>
+                        <td className="font-mono font-semibold text-sm">{metricName}</td>
+                        <td className="font-mono font-semibold text-sm">{metricValue.min.toFixed(2)}</td>
+                        <td className="font-mono font-semibold text-sm">{metricValue.max.toFixed(2)}</td>
+                        <td className="font-mono font-semibold text-sm">{metricValue.mean.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/** Table for category */}
+
+              <div className="overflow-x-auto mt-4">
+                <h4 className="font-bold mt-8">Dominant Categorical</h4>
+                <table className="table table-sm">
+                  <thead>
+                    <tr className="text-xs font-mono text-base-content/40">
+                      <th>Name</th>
+                      <th>Common</th>
+                      <th>Percentage</th>
+
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(info.dominant_categories).map(([metricName, metricValue]) => (
+                      <tr className="hover:bg-base-content/5" key={metricName}>
+                        <td className="font-mono font-semibold text-sm">{metricName}</td>
+                        <td className="font-mono font-semibold text-sm">{metricValue.value}</td>
+                        <td className="font-mono font-semibold text-sm">{metricValue.percentage}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+          </div>
+        </details>
+
+      ))}
+
+
+    </>
+  );
+}
+
+
 const PIPELINE_STEPS = [
-    { step: 1, label: "Loading Cluster Source Data" },
-    { step: 2, label: "Training KMeans Model With Source Data" },
-    { step: 3, label: "Loading PCA Inference Data" },
-    { step: 4, label: "Assigning Cluster To Inference" },
-    { step: 5, label: "Computing Metrics" },
-    { step: 6, label: "Saving Cluster Dataset and Generating 3D Plot" },
-    { step: 7, label: "Getting Cluster Summary" },
-    { step: 8, label: "Finalizing Result" },
-    { step: 9, label: "Complete" },
-  ];
+  { step: 1, label: "Loading Cluster Source Data" },
+  { step: 2, label: "Training KMeans Model With Source Data" },
+  { step: 3, label: "Loading PCA Inference Data" },
+  { step: 4, label: "Assigning Cluster To Inference" },
+  { step: 5, label: "Computing Metrics" },
+  { step: 6, label: "Saving Cluster Dataset and Generating 3D Plot" },
+  { step: 7, label: "Getting Cluster Summary" },
+  { step: 8, label: "Finalizing Result" },
+  { step: 9, label: "Complete" },
+];
 
 
 export default function KMeansSection({ cleaningResult, headers }) {
@@ -273,7 +348,7 @@ export default function KMeansSection({ cleaningResult, headers }) {
       }
 
       {/* DaisyUI vertical steps */}
-      {(isStreaming || isDone) && 
+      {(isStreaming || isDone) &&
         <PipelineSteps currentStep={currentStep} status={status} pipeline={PIPELINE_STEPS} />
       }
 
@@ -286,12 +361,11 @@ export default function KMeansSection({ cleaningResult, headers }) {
       )}
 
       {metrics && <KMeansMetricsCard clusteringMetrics={metrics} />}
-
-      {cluster_summary && <div>
-        <pre>
-          {JSON.stringify(cluster_summary, null, 2)}
-        </pre>
-      </div>}
+      {cluster_summary && (<>
+        
+        <TableDataSummary cluster_info={cluster_summary.clusters} />
+      </>
+        )}
 
       {/* ── Final result ── */}
       {isDone && metrics && (

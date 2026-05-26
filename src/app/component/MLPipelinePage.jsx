@@ -5,6 +5,7 @@ import DataProcessingSection from "./DataProcessingSection";
 import KMeansSection from "./KMeansSection";
 import PipelineDivider from "./PipelineDivider";
 import PCASection from "./PCASection";
+import DBScanSection from "./DBScanSection";
 
 export default function MLPipelinePage() {
   const [cleaningResult, setCleaningResult] = useState(null);
@@ -147,6 +148,10 @@ export default function MLPipelinePage() {
             <KMeansSection cleaningResult={cleaningResult} headers={headers} />
           )}
         </div>
+        
+        {/* Connector */}
+        <PipelineDivider active={showProcessing} />
+        <DBScanSection />
 
         {!showClustering && (
           <div className="bg-base-100 rounded-3xl border border-base-content/5 p-8 opacity-30 pointer-events-none select-none">
