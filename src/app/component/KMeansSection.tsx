@@ -84,71 +84,85 @@ export function KMeansMetricsCard({ clusteringMetrics }: { clusteringMetrics: Me
 }
 
 export function TableDataSummary({ cluster_info }: { cluster_info: Record<string, ClusterInfo> }) {
+
+  const [active_cluster, set_active_cluster] = useState<string>("0")
+
   return (
     <>
-      
+
+      <h4 className="font-bold text-sm mt-4">Select Cluster For Overview</h4>
+      <div className="flex flex-wrap mt-4">
+        {Object.keys(cluster_info).map((key, id) =>
+          <button className={`btn btn-neutral ${key == active_cluster ? "btn-primary" : "btn-ghost"}`}
+            onClick={() => set_active_cluster(key)}
+            key={id}>
+            Cluster {key}
+          </button>)}
+      </div>
+
       {Object.entries(cluster_info).map(([clusterId, info]) => (
-        <details className="dropdown" key={clusterId}>
-          <summary className="btn m-1 text-lg font-bold w-full mt-4">Cluster {clusterId}</summary>
 
-          <div className="mt-6 space-y-4 animate-in fade-in duration-500" >
 
-            <div className="bg-base-200 rounded-2xl p-5 border border-base-content/10">
-              <p className="text-xs font-mono text-base-content/40 uppercase tracking-widest mb-4">Total Count: {info.row_count}</p>
+        <div className={`mt-6 space-y-4 animate-in fade-in duration-500 ${clusterId != active_cluster ? "hidden" : "block"}`} key={clusterId} >
 
-              {/** Table for numeric */}
-              <div className="overflow-x-auto ">
-                <h4 className="font-bold">Numerical Analysis</h4>
-                <table className="table table-sm">
-                  <thead>
-                    <tr className="text-xs font-mono text-base-content/40">
-                      <th>Name</th>
-                      <th>Min</th>
-                      <th>Max</th>
-                      <th>Mean</th>
+
+          <div className="bg-base-200 rounded-2xl p-5 border border-base-content/10">
+            <h4 className="font-bold">Numerical Analysis</h4>
+            {/** Table for numeric */}
+            <div className="overflow-x-auto ">
+
+              <table className="table table-sm">
+                <thead>
+                  <tr className="text-xs font-mono text-base-content/40">
+                    <th>Name</th>
+                    <th>Min</th>
+                    <th>Max</th>
+                    <th>Mean</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(info.numeric_summary).map(([metricName, metricValue]) => (
+                    <tr className="hover:bg-base-content/5" key={metricName}>
+                      <td className="font-mono font-semibold text-sm">{metricName}</td>
+                      <td className="font-mono font-semibold text-sm">{metricValue.min.toFixed(2)}</td>
+                      <td className="font-mono font-semibold text-sm">{metricValue.max.toFixed(2)}</td>
+                      <td className="font-mono font-semibold text-sm">{metricValue.mean.toFixed(2)}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(info.numeric_summary).map(([metricName, metricValue]) => (
-                      <tr className="hover:bg-base-content/5" key={metricName}>
-                        <td className="font-mono font-semibold text-sm">{metricName}</td>
-                        <td className="font-mono font-semibold text-sm">{metricValue.min.toFixed(2)}</td>
-                        <td className="font-mono font-semibold text-sm">{metricValue.max.toFixed(2)}</td>
-                        <td className="font-mono font-semibold text-sm">{metricValue.mean.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/** Table for category */}
-
-              <div className="overflow-x-auto mt-4">
-                <h4 className="font-bold mt-8">Dominant Categorical</h4>
-                <table className="table table-sm">
-                  <thead>
-                    <tr className="text-xs font-mono text-base-content/40">
-                      <th>Name</th>
-                      <th>Common</th>
-                      <th>Percentage</th>
-
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(info.dominant_categories).map(([metricName, metricValue]) => (
-                      <tr className="hover:bg-base-content/5" key={metricName}>
-                        <td className="font-mono font-semibold text-sm">{metricName}</td>
-                        <td className="font-mono font-semibold text-sm">{metricValue.value}</td>
-                        <td className="font-mono font-semibold text-sm">{metricValue.percentage}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-        </details>
+
+          <div className="bg-base-200 rounded-2xl p-5 border border-base-content/10">
+            {/** Table for category */}
+            <h4 className="font-bold mt-8">Dominant Categorical</h4>
+            <div className="overflow-x-auto mt-4">
+
+              <table className="table table-sm">
+                <thead>
+                  <tr className="text-xs font-mono text-base-content/40">
+                    <th>Name</th>
+                    <th>Common</th>
+                    <th>Percentage</th>
+
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(info.dominant_categories).map(([metricName, metricValue]) => (
+                    <tr className="hover:bg-base-content/5" key={metricName}>
+                      <td className="font-mono font-semibold text-sm">{metricName}</td>
+                      <td className="font-mono font-semibold text-sm">{metricValue.value}</td>
+                      <td className="font-mono font-semibold text-sm">{metricValue.percentage}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
 
       ))}
 
@@ -362,10 +376,10 @@ export default function KMeansSection({ cleaningResult, headers }) {
 
       {metrics && <KMeansMetricsCard clusteringMetrics={metrics} />}
       {cluster_summary && (<>
-        
+
         <TableDataSummary cluster_info={cluster_summary.clusters} />
       </>
-        )}
+      )}
 
       {/* ── Final result ── */}
       {isDone && metrics && (
