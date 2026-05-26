@@ -83,6 +83,19 @@ export function KMeansMetricsCard({ clusteringMetrics }: { clusteringMetrics: Me
   );
 }
 
+const PIPELINE_STEPS = [
+    { step: 1, label: "Loading Cluster Source Data" },
+    { step: 2, label: "Training KMeans Model With Source Data" },
+    { step: 3, label: "Loading PCA Inference Data" },
+    { step: 4, label: "Assigning Cluster To Inference" },
+    { step: 5, label: "Computing Metrics" },
+    { step: 6, label: "Saving Cluster Dataset and Generating 3D Plot" },
+    { step: 7, label: "Getting Cluster Summary" },
+    { step: 8, label: "Finalizing Result" },
+    { step: 9, label: "Complete" },
+  ];
+
+
 export default function KMeansSection({ cleaningResult, headers }) {
   const [k, setK] = useState(3);
   const [maxIter, setMaxIter] = useState(300);
@@ -92,17 +105,8 @@ export default function KMeansSection({ cleaningResult, headers }) {
   // const [result, setResult] = useState(null);
 
 
-  const PIPELINE_STEPS = [
-    { step: 1, label: "Loading Cluster Source Data" },
-    { step: 2, label: "Training KMeans Model With Source Data" },
-    { step: 3, label: "Loading PCA Inference Data" },
-    { step: 4, label: "Assigning Cluster To Inference" },
-    { step: 5, label: "Computing Metrics" },
-    { step: 6, label: "Saving Cluster Dataset" },
-    { step: 7, label: "Complete" },
-  ];
 
-  const { status, logs, metrics, start, cancel, reset } =
+  const { status, logs, metrics, cluster_summary, start, cancel, reset } =
     useKmeanStream();
 
   const isStreaming = status === "streaming";
@@ -282,6 +286,12 @@ export default function KMeansSection({ cleaningResult, headers }) {
       )}
 
       {metrics && <KMeansMetricsCard clusteringMetrics={metrics} />}
+
+      {cluster_summary && <div>
+        <pre>
+          {JSON.stringify(cluster_summary, null, 2)}
+        </pre>
+      </div>}
 
       {/* ── Final result ── */}
       {isDone && metrics && (

@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { StreamError, StreamStatus } from "../types/cleaning";
 import { DiagnosticsEvent, PCAProcessResponse } from "../types/pca";
-import { MetricsEventData } from "../types/kmeans";
+import { ClusterSummaryData, MetricsEventData } from "../types/kmeans";
 
 
 
@@ -9,6 +9,7 @@ export interface KmeansStreamState {
   status: StreamStatus; // TO RELOCATE: generic instead of type cleaning
   logs: ProgressEvent[];
   metrics: MetricsEventData | null;
+  cluster_summary: ClusterSummaryData | null;
   error: StreamError | null;   // TO RELOCATE: generic instead of type cleaning
 }
 
@@ -21,6 +22,7 @@ export function useKmeanStream() {
     status: "idle",
     logs: [],
     metrics: null,
+    cluster_summary: null,
     error: null,
   });
 
@@ -81,8 +83,12 @@ export function useKmeanStream() {
             setState((p) => ({ ...p, logs: [...p.logs, parsed as ProgressEvent] }));
             break;
           case "metrics":
-            setState((p) => ({ ...p, status:"done", metrics: parsed as MetricsEventData }));
+            setState((p) => ({ ...p, metrics: parsed as MetricsEventData }));
             console.log("metrics:", parsed)
+            break;
+          case "cluster_summary":
+            setState((p) => ({ ...p, status: "done", cluster_summary: parsed as ClusterSummaryData }));
+            console.log("cluster_summary:", parsed)
             break;
           case "error":
             setState((p) => ({ ...p, status: "error", error: parsed as StreamError }));
@@ -127,7 +133,7 @@ export function useKmeanStream() {
 
   const reset = useCallback(() => {
     abortRef.current?.abort();
-    setState({ status: "idle", logs: [], metrics: null, error: null });
+    setState({ status: "idle", logs: [], metrics: null, error: null, cluster_summary: null });
   }, []);
 
   return { ...state, start, cancel, reset };

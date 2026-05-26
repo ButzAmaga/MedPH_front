@@ -30,7 +30,7 @@ export async function GET(_req: NextRequest) {
   return new Response(upstream.body, {
     status: 200,
     headers: {
-      "Content-Type": "image",
+      "Content-Type": "image/png", // Fixed: Must be a valid MIME type
       "Content-Disposition": 'attachment; filename="3D plot.png"',
       "Cache-Control": "no-store",
     },
