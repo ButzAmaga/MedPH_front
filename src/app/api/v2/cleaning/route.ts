@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   // Forward the multipart/form-data body as-is to FastAPI
   const formData = await req.formData();
  
-  const upstream = await fetch(`${FASTAPI_URL}/cleaning/v2/clean?is_2022_format=false`, {
+  const upstream = await fetch(`${FASTAPI_URL}/cleaning/v3/clean`, {
     method: "POST",
     body: formData,
     // Do NOT set Content-Type — fetch sets it automatically with the correct boundary

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import DataCleaningSection from "./DataCleaningSection";
+import DataCleaningSection from "./DataCleaningSectionMultiple";
 import DataProcessingSection from "./DataProcessingSection";
 import KMeansSection from "./KMeansSection";
 import PipelineDivider from "./PipelineDivider";
@@ -12,6 +12,7 @@ export default function MLPipelinePage() {
   const [headers, setHeaders] = useState([]);
   const [rows, setRows] = useState([]);
   const [showProcessing, setShowProcessing] = useState(true);
+  const [showPCA, setShowPCA] = useState(false);
   const [showClustering, setShowClustering] = useState(true);
 
   const [column_present, setColumnPresent] = useState([]);
@@ -29,11 +30,6 @@ export default function MLPipelinePage() {
     setTimeout(() => setShowProcessing(true), 400);
   };
 
-  const completedSteps = [
-    cleaningResult ? 1 : 0,
-    showProcessing ? 1 : 0,
-    showClustering ? 1 : 0,
-  ].reduce((a, b) => a + b, 0);
 
   return (
     <div className="min-h-screen bg-base-100 text-base-content font-sans">
@@ -112,7 +108,7 @@ export default function MLPipelinePage() {
 
         {/* Step 2 */}
         <div className={`bg-base-100 rounded-3xl border p-8 shadow-sm transition-all duration-700 overflow-hidden
-          ${showProcessing ? "border-base-content/10 opacity-100 max-h-[9999px]" : "border-base-content/5 opacity-30 max-h-0 p-0"}`}>
+          ${showProcessing ? "border-base-content/10 opacity-100 max-h-2499.75" : "border-base-content/5 opacity-30 max-h-0 p-0"}`}>
 
           {showProcessing && <DataProcessingSection handleColumns={setColumnPresent}/>}
         </div>
