@@ -516,7 +516,7 @@ export default function DataCleaningSection({
         <>
           {/* Drop zone */}
           <div
-            className={`relative border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-300 group
+            className={`relative border-2 border-dashed rounded-2xl p-10 py-4 text-center cursor-pointer transition-all duration-300 group
               ${dragging ? "border-primary bg-primary/10 scale-[1.01]" : "border-base-content/20 hover:border-primary/60 hover:bg-base-content/5"}
               ${entries.length > 0 ? "border-primary/40 bg-primary/5" : ""}`}
             onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
